@@ -53,7 +53,7 @@
 // the address for the eeprom
 #define I2C_EEPROM_ADDR 0x57
 #define YEAR_CENTURIES_OFFSET_ADDRESS 0xF
-#define PREV_YEAR_ADDRESS 0xF
+#define PREV_YEAR_ADDRESS 0xE
 #define YEAR_BASE 1970
 
 // *16
@@ -174,16 +174,17 @@ WireRtcLib::tm WireRtcLib::getTime(void)
 		m_tm.mday = bcd2dec(rtc[4]);
 		m_tm.mon  = bcd2dec(rtc[5]); // returns 1-12
 
-		uint8_t yearCentOffset = eeprom_read_byte_clck(YEAR_CENTURIES_OFFSET_ADDRESS);
 		uint8_t year = bcd2dec(rtc[6]);
-		uint8_t prevYear = eeprom_read_byte_clck(PREV_YEAR_ADDRESS);
 
-		if (prevYear == 255) {
-			prevYear = year;
+		uint8_t error = false;
+		uint8_t yearCentOffset = eeprom_read_byte_clck(YEAR_CENTURIES_OFFSET_ADDRESS, error);
+		if (error > 0) {
+			yearCentOffset = 0;
 		}
 
-		if (yearCentOffset == 255) {
-			yearCentOffset = 0;
+		uint8_t prevYear = eeprom_read_byte_clck(PREV_YEAR_ADDRESS, error);
+		if (error > 0) {
+			prevYear = year;
 		}
 
 		if (prevYear != year){
@@ -254,24 +255,26 @@ void WireRtcLib::setTime(const WireRtcLib::tm & tm)
 	uint8_t yearCentOffset = offset / 100;
 	uint8_t year = offset % 100;
 
-	/*Serial.println(yearCentOffset);
-	Serial.println(year);
+	Wire.write(dec2bcd(year)); // year
 
-	Serial.println("-----");*/
+	Wire.endTransmission();
 
 	eeprom_write_byte_clck(YEAR_CENTURIES_OFFSET_ADDRESS, yearCentOffset);
 	eeprom_write_byte_clck(PREV_YEAR_ADDRESS, year);
-	Wire.write(dec2bcd(year)); // year
+
+	/*Serial.println(yearCentOffset);
+	Serial.println(year);
+
+	Serial.println("-----");
 	
-	/*yearCentOffset = eeprom_read_byte_clck(YEAR_CENTURIES_OFFSET_ADDRESS);
-	uint8_t prevYear = eeprom_read_byte_clck(PREV_YEAR_ADDRESS);
+	uint8_t error = false;
+	yearCentOffset = eeprom_read_byte_clck(YEAR_CENTURIES_OFFSET_ADDRESS, error);
+	uint8_t prevYear = eeprom_read_byte_clck(PREV_YEAR_ADDRESS, error);
 
 	Serial.println(yearCentOffset);
 	Serial.println(prevYear);
 
 	Serial.println("+++++");*/
-
-	Wire.endTransmission();
 }
 
 void WireRtcLib::setTime_s(uint8_t hour, uint8_t min, uint8_t sec)
@@ -692,12 +695,12 @@ time_t WireRtcLib::makeTime(const WireRtcLib::tm & tm){
   return seconds; 
 }
 
-uint8_t WireRtcLib::eeprom_read_byte_clck(uint16_t eeaddress) {
-	uint8_t rdata = 0xFF;
+uint8_t WireRtcLib::eeprom_read_byte_clck(uint16_t eeaddress, uint8_t & error) {
+	uint8_t rdata = 0;
     Wire.beginTransmission(I2C_EEPROM_ADDR);
     Wire.write((int)(eeaddress >> 8)); // MSB
     Wire.write((int)(eeaddress & 0xFF)); // LSB
-    Wire.endTransmission();
+    error = Wire.endTransmission();
     Wire.requestFrom(I2C_EEPROM_ADDR,1);
     if (Wire.available()) rdata = Wire.read();
     return rdata;

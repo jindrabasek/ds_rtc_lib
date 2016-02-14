@@ -115,7 +115,7 @@ public:
 
 	void eeprom_write_byte_clck(uint16_t eeaddress, uint8_t data);
 
-	uint8_t eeprom_read_byte_clck(uint16_t eeaddress);
+	uint8_t eeprom_read_byte_clck(uint16_t eeaddress, uint8_t & error);
 
 #ifndef DS3231_ONLY
 	// start/stop clock running (DS1307 only)
