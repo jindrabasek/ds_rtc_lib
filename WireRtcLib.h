@@ -23,7 +23,7 @@
 #else
 #  include <WProgram.h>
 #endif
-#include <../Wire/Wire.h>
+#include <Wire.h>
 
 #include <avr/io.h>
 
@@ -46,122 +46,122 @@ typedef unsigned long time_t;
 
 class WireRtcLib {
 public:
-	class tm {
-	public:
-		bool error = false;
-		uint8_t sec;      // 0 to 59 (or 60 for occasional rare leap-seconds)
-		uint8_t min;      // 0 to 59
-		uint8_t hour;     // 0 to 23
-		uint8_t mday;     // 1 to 31
-		uint8_t mon;      // 1 to 12
-		int year;
-		uint8_t wday;     // 1-7
-		// 12-hour clock data (set when READING time, ignored when SETTING time)
-		bool am; // true for AM, false for PM
-		uint8_t twelveHour; // 12 hour clock time
-	};
+    class tm {
+    public:
+        bool error = false;
+        uint8_t sec;      // 0 to 59 (or 60 for occasional rare leap-seconds)
+        uint8_t min;      // 0 to 59
+        uint8_t hour;     // 0 to 23
+        uint8_t mday;     // 1 to 31
+        uint8_t mon;      // 1 to 12
+        int year;
+        uint8_t wday;     // 1-7
+        // 12-hour clock data (set when READING time, ignored when SETTING time)
+        bool am; // true for AM, false for PM
+        uint8_t twelveHour; // 12 hour clock time
+    };
 
 private:
 #ifndef DS3231_ONLY
-	bool m_is_ds1307;
-	bool m_is_ds3231;
+    bool m_is_ds1307;
+    bool m_is_ds3231;
 #endif
 
 public:
-	WireRtcLib();
+    WireRtcLib();
 
-	/** Initialize the RTC and autodetect type (DS1307 or DS3231) */
-	void begin();
-
-#ifndef DS3231_ONLY
-	// Autodetection
-	/** Check if the clock chip is a DS1307 */
-	bool isDS1307(void);
-	/** Check if the clock chip is a DS3231 */
-	bool isDS3231(void);
-
-	// Autodetection override
-	/** Force set the clock chip type to DS1307 */
-	void setDS1307(void);
-	/** Force set the clock chip type to DS3231 */
-	void setDS3231(void);
-#endif
-
-	// Get/set time
-	/* Gets the current time and date from the chip
-	 * @return WireRtcLib::tm structure filled with time data. This data is statically allocated by the library, and should not be deleted
-	 */
-	WireRtcLib::tm getTime(void);
-
-	/** Gets the current time from the chip, simplified version
-	 * @param hour pointer to value to store the current hour
-	 * @param min pointer to value to store the current minutes
-	 * @param sec pointer to value to store the curent seconds
-	 */
-	void getTime_s(uint8_t* hour, uint8_t* min, uint8_t* sec);
-
-	/** Set the time
-	 * @param tm Pointer to a WireRtcLib::tm structure filled with the time data to set
-	 *           Note that
-	 */
-	void setTime(const WireRtcLib::tm & tm);
-
-	/* Set the time, simplified version
-	 * @param hour The hour to set
-	 * @param min  The minutes to set
-	 * @param sec  The seconds to set
-	 */
-	void setTime_s(uint8_t hour, uint8_t min, uint8_t sec);
-
-	void eeprom_write_byte_clck(uint16_t eeaddress, uint8_t data);
-
-	uint8_t eeprom_read_byte_clck(uint16_t eeaddress, uint8_t & error);
+    /** Initialize the RTC and autodetect type (DS1307 or DS3231) */
+    void begin();
 
 #ifndef DS3231_ONLY
-	// start/stop clock running (DS1307 only)
-	void runClock(bool run);
-	bool isClockRunning(void);
+    // Autodetection
+    /** Check if the clock chip is a DS1307 */
+    bool isDS1307(void);
+    /** Check if the clock chip is a DS3231 */
+    bool isDS3231(void);
+
+    // Autodetection override
+    /** Force set the clock chip type to DS1307 */
+    void setDS1307(void);
+    /** Force set the clock chip type to DS3231 */
+    void setDS3231(void);
 #endif
 
-	// Temperature (DS3231 only)
-	void getTemp(int8_t* i, uint8_t* f);
-	void forceTempConversion(uint8_t block);
+    // Get/set time
+    /* Gets the current time and date from the chip
+     * @return WireRtcLib::tm structure filled with time data. This data is statically allocated by the library, and should not be deleted
+     */
+    WireRtcLib::tm getTime(void);
+
+    /** Gets the current time from the chip, simplified version
+     * @param hour pointer to value to store the current hour
+     * @param min pointer to value to store the current minutes
+     * @param sec pointer to value to store the curent seconds
+     */
+    void getTime_s(uint8_t* hour, uint8_t* min, uint8_t* sec);
+
+    /** Set the time
+     * @param tm Pointer to a WireRtcLib::tm structure filled with the time data to set
+     *           Note that
+     */
+    void setTime(const WireRtcLib::tm & tm);
+
+    /* Set the time, simplified version
+     * @param hour The hour to set
+     * @param min  The minutes to set
+     * @param sec  The seconds to set
+     */
+    void setTime_s(uint8_t hour, uint8_t min, uint8_t sec);
+
+    void eeprom_write_byte_clck(uint16_t eeaddress, uint8_t data);
+
+    uint8_t eeprom_read_byte_clck(uint16_t eeaddress, uint8_t & error);
 
 #ifndef DS3231_ONLY
-	// SRAM read/write (DS1307 only)
-	void getSram(uint8_t* data);
-	void setSram(uint8_t *data);
-	uint8_t getSramByte(uint8_t offset);
-	void setSramByte(uint8_t b, uint8_t offset);
+    // start/stop clock running (DS1307 only)
+    void runClock(bool run);
+    bool isClockRunning(void);
 #endif
 
-	// Auxillary functions
-	enum RTC_SQW_FREQ {
-		FREQ_1 = 0, FREQ_1024, FREQ_4096, FREQ_8192
-	};
+    // Temperature (DS3231 only)
+    void getTemp(int8_t* i, uint8_t* f);
+    void forceTempConversion(uint8_t block);
 
-	void SQWEnable(bool enable);
-	void SQWSetFreq(enum RTC_SQW_FREQ freq);
-	void Osc32kHzEnable(bool enable);
+#ifndef DS3231_ONLY
+    // SRAM read/write (DS1307 only)
+    void getSram(uint8_t* data);
+    void setSram(uint8_t *data);
+    uint8_t getSramByte(uint8_t offset);
+    void setSramByte(uint8_t b, uint8_t offset);
+#endif
 
-	// Alarm functionality
-	void resetAlarm(void);
-	void setAlarm(const WireRtcLib::tm & tm);
-	void setAlarm_s(uint8_t hour, uint8_t min, uint8_t sec);
-	WireRtcLib::tm getAlarm();
-	void getAlarm_s(uint8_t* hour, uint8_t* min, uint8_t* sec);bool checkAlarm(
-			void);
+    // Auxillary functions
+    enum RTC_SQW_FREQ {
+        FREQ_1 = 0, FREQ_1024, FREQ_4096, FREQ_8192
+    };
 
-	// Conversion utilities
-	static WireRtcLib::tm breakTime(time_t time); // break time_t into elements
-	static time_t makeTime(const WireRtcLib::tm & tm); // convert time elements into time_t
+    void SQWEnable(bool enable);
+    void SQWSetFreq(enum RTC_SQW_FREQ freq);
+    void Osc32kHzEnable(bool enable);
+
+    // Alarm functionality
+    void resetAlarm(void);
+    void setAlarm(const WireRtcLib::tm & tm);
+    void setAlarm_s(uint8_t hour, uint8_t min, uint8_t sec);
+    WireRtcLib::tm getAlarm();
+    void getAlarm_s(uint8_t* hour, uint8_t* min, uint8_t* sec);bool checkAlarm(
+            void);
+
+    // Conversion utilities
+    static WireRtcLib::tm breakTime(time_t time); // break time_t into elements
+    static time_t makeTime(const WireRtcLib::tm & tm); // convert time elements into time_t
 
 private:
-	uint8_t dec2bcd(uint8_t d);
-	uint8_t bcd2dec(uint8_t b);
-	uint8_t read_byte(uint8_t offset);
-	void write_byte(uint8_t b, uint8_t offset);
-	void write_addr(uint8_t addr);
+    uint8_t dec2bcd(uint8_t d);
+    uint8_t bcd2dec(uint8_t b);
+    uint8_t read_byte(uint8_t offset);
+    void write_byte(uint8_t b, uint8_t offset);
+    void write_addr(uint8_t addr);
 };
 
 #endif // WIRETRCLIB_H
