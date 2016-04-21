@@ -40,6 +40,7 @@
  */
 
 #include <avr/io.h>
+#include <Scheduler/Semaphore.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -54,6 +55,8 @@
 #define YEAR_CENTURIES_OFFSET_ADDRESS 0xF
 #define PREV_YEAR_ADDRESS 0xE
 #define YEAR_BASE 1970
+
+static Semaphore lock;
 
 // *16
 // >>4
@@ -70,11 +73,12 @@ uint8_t WireRtcLib::read_byte(uint8_t offset) {
     Wire.write(offset);
     Wire.endTransmission();
 
+    uint8_t result = 0;
     Wire.requestFrom(RTC_ADDR, 1);
-
     if (Wire.available())
-        return Wire.read();
-    return 0;
+        result = Wire.read();
+    Wire.endTransmission(); // end transmission
+    return result;
 }
 
 void WireRtcLib::write_byte(uint8_t b, uint8_t offset) {
@@ -99,7 +103,7 @@ WireRtcLib::WireRtcLib()
 }
 
 void WireRtcLib::begin() {
-    Wire.begin();
+    //Wire.begin();
 
 #ifndef DS3231_ONLY
     // Attempt autodetection:
@@ -138,6 +142,7 @@ void WireRtcLib::setDS3231(void) {m_is_ds1307 = false; m_is_ds3231 = true;}
 #endif
 
 WireRtcLib::tm WireRtcLib::getTime(void) {
+    lock.wait();
     uint8_t rtc[9];
 
     // read 7 bytes starting from register 0
@@ -205,10 +210,12 @@ WireRtcLib::tm WireRtcLib::getTime(void) {
         }
     }
 
+    lock.increase();
     return m_tm;
 }
 
 void WireRtcLib::getTime_s(uint8_t* hour, uint8_t* min, uint8_t* sec) {
+    lock.wait();
     uint8_t rtc[9];
 
     // read 7 bytes starting from register 0
@@ -225,6 +232,7 @@ void WireRtcLib::getTime_s(uint8_t* hour, uint8_t* min, uint8_t* sec) {
     }
 
     Wire.endTransmission();
+    lock.increase();
 
     if (sec)
         *sec = bcd2dec(rtc[0]);
@@ -235,6 +243,7 @@ void WireRtcLib::getTime_s(uint8_t* hour, uint8_t* min, uint8_t* sec) {
 }
 
 void WireRtcLib::setTime(const WireRtcLib::tm & tm) {
+    lock.wait();
     Wire.beginTransmission(RTC_ADDR);
     Wire.write((uint8_t) 0);
 
@@ -256,6 +265,7 @@ void WireRtcLib::setTime(const WireRtcLib::tm & tm) {
 
     eeprom_write_byte_clck(YEAR_CENTURIES_OFFSET_ADDRESS, yearCentOffset);
     eeprom_write_byte_clck(PREV_YEAR_ADDRESS, year);
+    lock.increase();
 
     /*Serial.println(yearCentOffset);
      Serial.println(year);
@@ -273,6 +283,7 @@ void WireRtcLib::setTime(const WireRtcLib::tm & tm) {
 }
 
 void WireRtcLib::setTime_s(uint8_t hour, uint8_t min, uint8_t sec) {
+    lock.wait();
     Wire.beginTransmission(RTC_ADDR);
     Wire.write((uint8_t) 0);
 
@@ -282,6 +293,7 @@ void WireRtcLib::setTime_s(uint8_t hour, uint8_t min, uint8_t sec) {
     Wire.write(dec2bcd(hour)); // hours
 
     Wire.endTransmission();
+    lock.increase();
 }
 
 #ifndef DS3231_ONLY
@@ -324,6 +336,7 @@ void WireRtcLib::getTemp(int8_t* i, uint8_t* f) {
     if (m_is_ds1307) return; // only valid on DS3231
 #endif
 
+    lock.wait();
     // temp registers are 0x11 and 0x12
     write_addr(0x11);
 
@@ -341,6 +354,8 @@ void WireRtcLib::getTemp(int8_t* i, uint8_t* f) {
         // float value can be read like so:
         // float temp = ((((short)msb << 8) | (short)lsb) >> 6) / 4.0f;
     }
+    Wire.endTransmission(); // end transmission
+    lock.increase();
 }
 
 void WireRtcLib::forceTempConversion(uint8_t block) {
@@ -359,11 +374,15 @@ void WireRtcLib::forceTempConversion(uint8_t block) {
         return;
 
     // Temp conversion is ready when control register becomes 0
+    bool inLoop = false;
     do {
         // Block until CONV is 0
         write_addr(0x0E);
         Wire.requestFrom(RTC_ADDR, 1);
-    } while (Wire.available() && (Wire.read() & 0b00100000) != 0);
+        inLoop = Wire.available() && (Wire.read() & 0b00100000) != 0;
+        Wire.endTransmission(); // end transmission
+    } while (inLoop);
+
 }
 
 #ifndef DS3231_ONLY
@@ -687,6 +706,7 @@ uint8_t WireRtcLib::eeprom_read_byte_clck(uint16_t eeaddress, uint8_t & error) {
     Wire.requestFrom(I2C_EEPROM_ADDR, 1);
     if (Wire.available())
         rdata = Wire.read();
+    Wire.endTransmission(); // end transmission
     return rdata;
 }
 
