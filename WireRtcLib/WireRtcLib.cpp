@@ -39,8 +39,11 @@
  *
  */
 
-#include <avr/io.h>
+#include <avr/sfr_defs.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <Scheduler/Semaphore.h>
+#include <Wire.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -394,7 +397,7 @@ void WireRtcLib::getSram(uint8_t* data)
 {
     // cannot receive 56 bytes in one go, because of the Wire library buffer limit
     // so just receive one at a time for simplicity
-    for(int i=0;i<56;i++)
+    for(uint8_t i=0;i<56;i++)
     data[i] = getSramByte(i);
 }
 
@@ -402,7 +405,7 @@ void WireRtcLib::setSram(uint8_t *data)
 {
     // cannot send 56 bytes in one go, because of the Wire library buffer limit
     // so just send one at a time for simplicity
-    for(int i=0;i<56;i++)
+    for(uint8_t i=0;i<56;i++)
     setSramByte(data[i], i);
 }
 
@@ -418,7 +421,7 @@ void WireRtcLib::setSramByte(uint8_t b, uint8_t offset)
 #endif
 
 void WireRtcLib::SQWEnable(bool enable) {
-    byte offset = 0x0E; // DS3231
+    uint8_t offset = 0x0E; // DS3231
 #ifndef DS3231_ONLY
     if (m_is_ds1307)
     offset = 0x07;
@@ -447,7 +450,7 @@ void WireRtcLib::SQWEnable(bool enable) {
 }
 
 void WireRtcLib::SQWSetFreq(enum RTC_SQW_FREQ freq) {
-    byte offset = 0x0E; // DS3231
+    uint8_t offset = 0x0E; // DS3231
 #ifndef DS3231_ONLY
     if (m_is_ds1307)
     offset = 0x07;
