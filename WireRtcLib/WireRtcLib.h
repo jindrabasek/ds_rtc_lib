@@ -155,6 +155,7 @@ public:
     // Conversion utilities
     static WireRtcLib::tm breakTime(time_t time); // break time_t into elements
     static time_t makeTime(const WireRtcLib::tm & tm); // convert time elements into time_t
+    static void formatTime(Print & out, const WireRtcLib::tm& time);
 
 private:
     uint8_t dec2bcd(uint8_t d);

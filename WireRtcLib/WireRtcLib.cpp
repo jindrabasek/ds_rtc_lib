@@ -42,6 +42,7 @@
 #include <avr/sfr_defs.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <Scheduler/Semaphore.h>
 #include <Wire.h>
 
@@ -722,3 +723,15 @@ void WireRtcLib::eeprom_write_byte_clck(uint16_t eeaddress, uint8_t data) {
     Wire.endTransmission();
 }
 
+#define printTimePart(timePart) if(timePart < 10) out.print('0'); itoa(timePart, buffer, 10); out.print(buffer)
+#define printTimePartSep(timePart, separator) printTimePart(timePart); out.print(separator)
+void WireRtcLib::formatTime(Print & out, const WireRtcLib::tm& time) {
+    char buffer[5];
+
+    printTimePartSep(time.year, '-');
+    printTimePartSep(time.mon, '-');
+    printTimePartSep(time.mday, 'T');
+    printTimePartSep(time.hour, ':');
+    printTimePartSep(time.min, ':');
+    printTimePart(time.sec);
+}
