@@ -113,9 +113,9 @@ public:
      */
     void setTime_s(uint8_t hour, uint8_t min, uint8_t sec);
 
-    void eeprom_write_byte_clck(uint16_t eeaddress, uint8_t data);
+    static void eeprom_write_byte_clck(uint16_t eeaddress, uint8_t data);
 
-    uint8_t eeprom_read_byte_clck(uint16_t eeaddress, uint8_t & error);
+    static uint8_t eeprom_read_byte_clck(uint16_t eeaddress, uint8_t & error);
 
 #ifndef DS3231_ONLY
     // start/stop clock running (DS1307 only)
@@ -158,11 +158,11 @@ public:
     static void formatTime(Print & out, const WireRtcLib::tm& time);
 
 private:
-    uint8_t dec2bcd(uint8_t d);
-    uint8_t bcd2dec(uint8_t b);
-    uint8_t read_byte(uint8_t offset);
-    void write_byte(uint8_t b, uint8_t offset);
-    void write_addr(uint8_t addr);
+    static uint8_t dec2bcd(uint8_t d);
+    static uint8_t bcd2dec(uint8_t b);
+    static uint8_t read_byte(uint8_t offset);
+    static void write_byte(uint8_t b, uint8_t offset);
+    static void write_addr(uint8_t addr);
 };
 
 #endif // WIRETRCLIB_H
