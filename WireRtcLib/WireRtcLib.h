@@ -48,7 +48,7 @@ class WireRtcLib {
 public:
     class tm {
     public:
-        bool error = false;
+        bool error = true;
         uint8_t sec;      // 0 to 59 (or 60 for occasional rare leap-seconds)
         uint8_t min;      // 0 to 59
         uint8_t hour;     // 0 to 23
@@ -59,6 +59,7 @@ public:
         // 12-hour clock data (set when READING time, ignored when SETTING time)
         bool am; // true for AM, false for PM
         uint8_t twelveHour; // 12 hour clock time
+        unsigned long timeStamp;
     };
 
 private:

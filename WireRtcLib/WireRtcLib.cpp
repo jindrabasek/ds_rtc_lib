@@ -212,6 +212,8 @@ WireRtcLib::tm WireRtcLib::getTime(void) {
             m_tm.twelveHour = m_tm.hour - 12;
             m_tm.am = 0;
         }
+
+        m_tm.timeStamp = WireRtcLib::makeTime(m_tm);
     }
 
     lock.increase();
